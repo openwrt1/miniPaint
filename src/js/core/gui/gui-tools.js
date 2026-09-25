@@ -61,7 +61,7 @@ class GUI_tools_class {
 				};
 
 				//init events once
-				if(typeof object.load != "undefined") {
+				if (typeof object.load != "undefined") {
 					object.load();
 				}
 			}
@@ -78,7 +78,7 @@ class GUI_tools_class {
 		var target_id = "tools_container";
 		var _this = this;
 		var saved_tool = this.Helper.getCookie('active_tool');
-		if(saved_tool == 'media' || saved_tool == 'shape') {
+		if (saved_tool == 'media' || saved_tool == 'shape') {
 			//bringing this back by default gives bad UX
 			saved_tool = null
 		}
@@ -86,10 +86,18 @@ class GUI_tools_class {
 			this.active_tool = saved_tool;
 		}
 
+		// Global tooltip element
+		if (!document.getElementById('ui_tooltip')) {
+			var tooltip = document.createElement('div');
+			tooltip.id = 'ui_tooltip';
+			tooltip.className = 'ui_tooltip';
+			document.body.appendChild(tooltip);
+		}
+
 		//left menu
 		for (var i in config.TOOLS) {
 			var item = config.TOOLS[i];
-			if(item.title)
+			if (item.title)
 				var title = item.title;
 			else
 				var title = this.Helper.ucfirst(item.name).replace(/_/, ' ');
@@ -103,13 +111,41 @@ class GUI_tools_class {
 			else {
 				itemDom.className = 'item trn ' + item.name;
 			}
-			if(item.visible === false){
+			if (item.visible === false) {
 				itemDom.style.display = 'none';
 			}
 
 			//event
 			itemDom.addEventListener('click', function (event) {
 				_this.activate_tool(this.id);
+			});
+
+			// tooltip events
+			itemDom.addEventListener('mouseenter', function (event) {
+				var tooltip = document.getElementById('ui_tooltip');
+				// Use data-original-title if title was moved, otherwise use title
+				var titleText = this.getAttribute('title') || this.getAttribute('data-original-title');
+				tooltip.innerHTML = titleText;
+
+				// Hide native tooltip to avoid overlap
+				if (this.hasAttribute('title')) {
+					this.setAttribute('data-original-title', this.getAttribute('title'));
+					this.removeAttribute('title');
+				}
+
+				var rect = this.getBoundingClientRect();
+				tooltip.style.left = rect.right + 'px';
+				tooltip.style.top = (rect.top + rect.height / 2) + 'px';
+				tooltip.classList.add('active');
+			});
+			itemDom.addEventListener('mouseleave', function (event) {
+				var tooltip = document.getElementById('ui_tooltip');
+				tooltip.classList.remove('active');
+
+				// Restore native title for jquery.translate.js
+				if (this.hasAttribute('data-original-title')) {
+					this.setAttribute('title', this.getAttribute('data-original-title'));
+				}
 			});
 
 			//register
@@ -201,7 +237,7 @@ class GUI_tools_class {
 					element.classList.add('input_height');
 					element.innerHTML = icon;
 					element.title = k;
-					element.innerHTML = '<img style="width:16px;height:16px;" alt="'+title+'" src="images/icons/'+icon+'" />';
+					element.innerHTML = '<img style="width:16px;height:16px;" alt="' + title + '" src="images/icons/' + icon + '" />';
 				} else {
 					element.classList.add('ui_toggle_button');
 				}
